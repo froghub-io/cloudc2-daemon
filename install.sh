@@ -9,61 +9,61 @@ set -o noglob
 #
 # Example:
 #   Installing an agent to point at a daemon:
-#     curl ... | CLOUDC2_daemon_APPID=xxx sh -
+#     curl ... | CLOUDC2_DAEMON_APPID=xxx sh -
 #
 # Environment variables:
-#   - CLOUDC2_daemon_*
-#     Environment variables which begin with CLOUDC2_daemon_ will be preserved for the
+#   - CLOUDC2_DAEMON_*
+#     Environment variables which begin with CLOUDC2_DAEMON_ will be preserved for the
 #     systemd service to use.
 #
-#   - CLOUDC2_daemon_APPID
+#   - CLOUDC2_DAEMON_APPID
 #     Must be set to identify cloudc2-daemon.
 #
-#   - CLOUDC2_daemon_ADVERTISE_ADDRESS
+#   - CLOUDC2_DAEMON_ADVERTISE_ADDRESS
 #     Host address and port monitored by gateway.
 #     Defaults to https://cloudc2.froghub.cn.
 #
-#   - CLOUDC2_daemon_IPFS_GATEWAY
+#   - CLOUDC2_DAEMON_IPFS_GATEWAY
 #     Proxy gateway for downloading filecoin proof parameter data.
 #     Defaults to 'https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/",
 #
-#   - CLOUDC2_daemon_FIL_PROOFS_PARAMETER_CACHE
+#   - CLOUDC2_DAEMON_FIL_PROOFS_PARAMETER_CACHE
 #     Directory to store filecoin proofs parameter data, or use
 #     /var/local as the default
 #
-#   - CLOUDC2_daemon_INSTALL_SYMLINK
+#   - CLOUDC2_DAEMON_INSTALL_SYMLINK
 #     If set to 'skip' will not create symlinks, 'force' will overwrite,
 #     default will symlink if command does not exist in path.
 #
-#   - CLOUDC2_daemon_INSTALL_VERSION
+#   - CLOUDC2_DAEMON_INSTALL_VERSION
 #     Version of cloudc2-daemon to download from github. Will attempt to download from the
 #     stable channel if not specified.
 #
-#   - CLOUDC2_daemon_INSTALL_COMMIT
+#   - CLOUDC2_DAEMON_INSTALL_COMMIT
 #     Commit of cloudc2-daemon to download from temporary cloud storage.
 #     * (for developer & QA use)
 #
-#   - CLOUDC2_daemon_INSTALL_BIN_DIR
+#   - CLOUDC2_DAEMON_INSTALL_BIN_DIR
 #     Directory to install cloudc2-daemon binary, links, and uninstall script to, or use
 #     /usr/local/bin as the default
 #
-#   - CLOUDC2_daemon_INSTALL_SYSTEMD_DIR
+#   - CLOUDC2_DAEMON_INSTALL_SYSTEMD_DIR
 #     Directory to install systemd service and environment files to, or use
 #     /etc/systemd/system as the default
 #
-#   - CLOUDC2_daemon_INSTALL_NAME
+#   - CLOUDC2_DAEMON_INSTALL_NAME
 #     Name of systemd service to create, will default from the cloudc2-daemon exec command
 #     if not specified. If specified the name will be prefixed with 'cloudc2-daemon-'.
 #
-#   - CLOUDC2_daemon_INSTALL_CHANNEL_URL
+#   - CLOUDC2_DAEMON_INSTALL_CHANNEL_URL
 #     Channel URL for fetching cloudc2-daemon download URL.
 #     Defaults to 'https://update-cloudc2-daemon.froghub.cn/v1-release/channels'.
 #
-#   - CLOUDC2_daemon_INSTALL_CHANNEL
+#   - CLOUDC2_DAEMON_INSTALL_CHANNEL
 #     Channel to use for fetching cloudc2-daemon download URL.
 #     Defaults to 'stable'.
 #
-#   - CLOUDC2_daemon_WORKER_PAR
+#   - CLOUDC2_DAEMON_WORKER_PAR
 #     The number of parallel operations performed by the worker. The default is automatic
 
 GITHUB_URL=https://github.com/froghub-io/cloudc2-daemon/releases
@@ -122,10 +122,10 @@ escape_dq() {
 # --- define needed environment variables ---
 setup_env() {
 
-info "${CLOUDC2_daemon_INSTALL_NAME}"
+info "${CLOUDC2_DAEMON_INSTALL_NAME}"
     # --- use systemd name if defined or create default ---
-    if [ -n "${CLOUDC2_daemon_INSTALL_NAME}" ]; then
-        SYSTEM_NAME=cloudc2-daemon-${CLOUDC2_daemon_INSTALL_NAME}
+    if [ -n "${CLOUDC2_DAEMON_INSTALL_NAME}" ]; then
+        SYSTEM_NAME=cloudc2-daemon-${CLOUDC2_DAEMON_INSTALL_NAME}
     else
         SYSTEM_NAME=cloudc2-daemon
     fi
@@ -146,8 +146,8 @@ info "${CLOUDC2_daemon_INSTALL_NAME}"
     fi
 
     # --- use binary install directory if defined or create default ---
-    if [ -n "${CLOUDC2_daemon_INSTALL_BIN_DIR}" ]; then
-        BIN_DIR=${CLOUDC2_daemon_INSTALL_BIN_DIR}
+    if [ -n "${CLOUDC2_DAEMON_INSTALL_BIN_DIR}" ]; then
+        BIN_DIR=${CLOUDC2_DAEMON_INSTALL_BIN_DIR}
     else
         # --- use /usr/local/bin if root can write to it, otherwise use /opt/bin if it exists
         BIN_DIR=/usr/local/bin
@@ -159,26 +159,26 @@ info "${CLOUDC2_daemon_INSTALL_NAME}"
     fi
 
     # --- use systemd directory if defined or create default ---
-    if [ -n "${CLOUDC2_daemon_INSTALL_SYSTEMD_DIR}" ]; then
-        SYSTEMD_DIR="${CLOUDC2_daemon_INSTALL_SYSTEMD_DIR}"
+    if [ -n "${CLOUDC2_DAEMON_INSTALL_SYSTEMD_DIR}" ]; then
+        SYSTEMD_DIR="${CLOUDC2_DAEMON_INSTALL_SYSTEMD_DIR}"
     else
         SYSTEMD_DIR=/etc/systemd/system
     fi
 
     # --- set related files from system name ---
-    SERVICE_CLOUDC2_daemon=${SYSTEM_NAME}.service
+    SERVICE_CLOUDC2_DAEMON=${SYSTEM_NAME}.service
     UNINSTALL_SH=${UNINSTALL_SH:-${BIN_DIR}/${SYSTEM_NAME}-uninstall.sh}
     KILLALL_SH=${KILLALL_SH:-${BIN_DIR}/cloudc2-daemon-killall.sh}
 
-    FILE_SERVICE=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_daemon}
-    FILE_ENV=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_daemon}.env
+    FILE_SERVICE=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_DAEMON}
+    FILE_ENV=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_DAEMON}.env
 
     # --- get hash of config & exec for currently installed cloudc2-daemon ---
     PRE_INSTALL_HASHES=$(get_installed_hashes)
 
     # --- setup channel values
-    CLOUDC2_daemon_INSTALL_CHANNEL_URL=${CLOUDC2_daemon_INSTALL_CHANNEL_URL:-'https://update-cloudc2-daemon.froghub.cn/v1-release/channels'}
-    CLOUDC2_daemon_INSTALL_CHANNEL=${CLOUDC2_daemon_INSTALL_CHANNEL:-'stable'}
+    CLOUDC2_DAEMON_INSTALL_CHANNEL_URL=${CLOUDC2_DAEMON_INSTALL_CHANNEL_URL:-'https://update-cloudc2-daemon.froghub.cn/v1-release/channels'}
+    CLOUDC2_DAEMON_INSTALL_CHANNEL=${CLOUDC2_DAEMON_INSTALL_CHANNEL:-'stable'}
 }
 
 # --- set arch and suffix, fatal if architecture not supported ---
@@ -227,26 +227,26 @@ setup_tmp() {
 
 # --- use desired cloudc2-daemon version if defined or find version from channel ---
 get_release_version() {
-     if [ -n "${CLOUDC2_daemon_INSTALL_COMMIT}" ]; then
-         VERSION_CLOUDC2_daemon="commit ${CLOUDC2_daemon_INSTALL_COMMIT}"
-     elif [ -n "${CLOUDC2_daemon_INSTALL_VERSION}" ]; then
-         VERSION_CLOUDC2_daemon=${CLOUDC2_daemon_INSTALL_VERSION}
+     if [ -n "${CLOUDC2_DAEMON_INSTALL_COMMIT}" ]; then
+         VERSION_CLOUDC2_DAEMON="commit ${CLOUDC2_DAEMON_INSTALL_COMMIT}"
+     elif [ -n "${CLOUDC2_DAEMON_INSTALL_VERSION}" ]; then
+         VERSION_CLOUDC2_DAEMON=${CLOUDC2_DAEMON_INSTALL_VERSION}
      else
-         info "Finding release for channel ${CLOUDC2_daemon_INSTALL_CHANNEL}"
-         version_url="${CLOUDC2_daemon_INSTALL_CHANNEL_URL}/${CLOUDC2_daemon_INSTALL_CHANNEL}"
+         info "Finding release for channel ${CLOUDC2_DAEMON_INSTALL_CHANNEL}"
+         version_url="${CLOUDC2_DAEMON_INSTALL_CHANNEL_URL}/${CLOUDC2_DAEMON_INSTALL_CHANNEL}"
          case $DOWNLOADER in
              curl)
-                 VERSION_CLOUDC2_daemon=$(curl -w '%{url_effective}' -L -s -S ${version_url} -o /dev/null | sed -e 's|.*/||')
+                 VERSION_CLOUDC2_DAEMON=$(curl -w '%{url_effective}' -L -s -S ${version_url} -o /dev/null | sed -e 's|.*/||')
                  ;;
              wget)
-                 VERSION_CLOUDC2_daemon=$(wget -SqO /dev/null ${version_url} 2>&1 | grep -i Location | sed -e 's|.*/||')
+                 VERSION_CLOUDC2_DAEMON=$(wget -SqO /dev/null ${version_url} 2>&1 | grep -i Location | sed -e 's|.*/||')
                  ;;
              *)
                  fatal "Incorrect downloader executable '$DOWNLOADER'"
                  ;;
          esac
      fi
-    info "Using ${VERSION_CLOUDC2_daemon} as release"
+    info "Using ${VERSION_CLOUDC2_DAEMON} as release"
 }
 
 # --- download from github url ---
@@ -271,11 +271,11 @@ download() {
 
 # --- download hash from github url ---
 download_hash() {
-    info "${CLOUDC2_daemon_INSTALL_COMMIT}"
-    if [ -n "${CLOUDC2_daemon_INSTALL_COMMIT}" ]; then
-        HASH_URL=${STORAGE_URL}/${CLOUDC2_daemon_INSTALL_COMMIT}/sha256sum-${ARCH}.txt
+    info "${CLOUDC2_DAEMON_INSTALL_COMMIT}"
+    if [ -n "${CLOUDC2_DAEMON_INSTALL_COMMIT}" ]; then
+        HASH_URL=${STORAGE_URL}/${CLOUDC2_DAEMON_INSTALL_COMMIT}/sha256sum-${ARCH}.txt
     else
-        HASH_URL=${GITHUB_URL}/download/${VERSION_CLOUDC2_daemon}/sha256sum-${ARCH}.txt
+        HASH_URL=${GITHUB_URL}/download/${VERSION_CLOUDC2_DAEMON}/sha256sum-${ARCH}.txt
     fi
     info "Downloading hash ${HASH_URL}"
     download ${TMP_HASH} ${HASH_URL}
@@ -298,10 +298,10 @@ installed_hash_matches() {
 
 # --- download binary from github url ---
 download_binary() {
-    if [ -n "${CLOUDC2_daemon_INSTALL_COMMIT}" ]; then
-        BIN_URL=${STORAGE_URL}/${CLOUDC2_daemon_INSTALL_COMMIT}/cloudc2-daemon${SUFFIX}
+    if [ -n "${CLOUDC2_DAEMON_INSTALL_COMMIT}" ]; then
+        BIN_URL=${STORAGE_URL}/${CLOUDC2_DAEMON_INSTALL_COMMIT}/cloudc2-daemon${SUFFIX}
     else
-        BIN_URL=${GITHUB_URL}/download/${VERSION_CLOUDC2_daemon}/cloudc2-daemon${SUFFIX}
+        BIN_URL=${GITHUB_URL}/download/${VERSION_CLOUDC2_DAEMON}/cloudc2-daemon${SUFFIX}
     fi
     info "Downloading binary ${BIN_URL}"
     download ${TMP_BIN} ${BIN_URL}
@@ -345,12 +345,12 @@ download_and_verify() {
 
 # --- add additional utility links ---
 create_symlinks() {
-    [ "${CLOUDC2_daemon_INSTALL_SYMLINK}" = skip ] && return
+    [ "${CLOUDC2_DAEMON_INSTALL_SYMLINK}" = skip ] && return
 
     for cmd in cloudc2-daemon; do
-        if [ ! -e ${BIN_DIR}/${cmd} ] || [ "${CLOUDC2_daemon_INSTALL_SYMLINK}" = force ]; then
+        if [ ! -e ${BIN_DIR}/${cmd} ] || [ "${CLOUDC2_DAEMON_INSTALL_SYMLINK}" = force ]; then
             which_cmd=$(command -v ${cmd} 2>/dev/null || true)
-            if [ -z "${which_cmd}" ] || [ "${CLOUDC2_daemon_INSTALL_SYMLINK}" = force ]; then
+            if [ -z "${which_cmd}" ] || [ "${CLOUDC2_DAEMON_INSTALL_SYMLINK}" = force ]; then
                 info "Creating ${BIN_DIR}/${cmd} symlink to cloudc2-daemon"
                 $SUDO ln -sf cloudc2-daemon ${BIN_DIR}/${cmd}
             else
@@ -461,8 +461,8 @@ EOF
 # --- disable current service if loaded --
 systemd_disable() {
     $SUDO systemctl disable ${SYSTEM_NAME} >/dev/null 2>&1 || true
-    $SUDO rm -f /etc/systemd/system/${SERVICE_CLOUDC2_daemon} || true
-    $SUDO rm -f /etc/systemd/system/${SERVICE_CLOUDC2_daemon}.env || true
+    $SUDO rm -f /etc/systemd/system/${SERVICE_CLOUDC2_DAEMON} || true
+    $SUDO rm -f /etc/systemd/system/${SERVICE_CLOUDC2_DAEMON}.env || true
 }
 
 # --- capture current env and create file containing cloudc2-daemon variables ---
@@ -471,7 +471,7 @@ create_env_file() {
     info "${FILE_ENV}"
     $SUDO touch ${FILE_ENV}
     $SUDO chmod 0600 ${FILE_ENV}
-    env | grep 'CLOUDC2_daemon_' | $SUDO tee ${FILE_ENV} >/dev/null
+    env | grep 'CLOUDC2_DAEMON_' | $SUDO tee ${FILE_ENV} >/dev/null
     env | grep -Ei '^(NO|HTTP|HTTPS)_PROXY' | $SUDO tee -a ${FILE_ENV} >/dev/null
 }
 
@@ -480,7 +480,7 @@ create_systemd_service_file() {
     info "systemd: Creating service file ${FILE_SERVICE}"
     $SUDO tee ${FILE_SERVICE} >/dev/null << EOF
 [Unit]
-Description=Cloudc2_daemon
+Description=CLOUDC2_DAEMON
 Documentation=https://www.froghub.io
 Wants=network-online.target
 After=network-online.target
