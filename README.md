@@ -1,1 +1,1 @@
-# cloudc2-deamon
+# cloudc2-daemon
