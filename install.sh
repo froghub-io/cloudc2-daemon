@@ -8,66 +8,66 @@ set -o noglob
 #   ENV_VAR=... ./install.sh
 #
 # Example:
-#   Installing an agent to point at a deamon:
-#     curl ... | CLOUDC2_DEAMON_APPID=xxx sh -
+#   Installing an agent to point at a daemon:
+#     curl ... | CLOUDC2_daemon_APPID=xxx sh -
 #
 # Environment variables:
-#   - CLOUDC2_DEAMON_*
-#     Environment variables which begin with CLOUDC2_DEAMON_ will be preserved for the
+#   - CLOUDC2_daemon_*
+#     Environment variables which begin with CLOUDC2_daemon_ will be preserved for the
 #     systemd service to use.
 #
-#   - APPID
-#     Must be set to identify cloudc2-deamon.
+#   - CLOUDC2_daemon_APPID
+#     Must be set to identify cloudc2-daemon.
 #
-#   - ADVERTISE_ADDRESS
+#   - CLOUDC2_daemon_ADVERTISE_ADDRESS
 #     Host address and port monitored by gateway.
 #     Defaults to https://cloudc2.froghub.cn.
 #
-#   - CLOUDC2_DEAMON_IPFS_GATEWAY
+#   - CLOUDC2_daemon_IPFS_GATEWAY
 #     Proxy gateway for downloading filecoin proof parameter data.
 #     Defaults to 'https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/",
 #
-#   - CLOUDC2_DEAMON_FIL_PROOFS_PARAMETER_CACHE
+#   - CLOUDC2_daemon_FIL_PROOFS_PARAMETER_CACHE
 #     Directory to store filecoin proofs parameter data, or use
 #     /var/local as the default
 #
-#   - INSTALL_SYMLINK
+#   - CLOUDC2_daemon_INSTALL_SYMLINK
 #     If set to 'skip' will not create symlinks, 'force' will overwrite,
 #     default will symlink if command does not exist in path.
 #
-#   - INSTALL_VERSION
-#     Version of cloudc2-deamon to download from github. Will attempt to download from the
+#   - CLOUDC2_daemon_INSTALL_VERSION
+#     Version of cloudc2-daemon to download from github. Will attempt to download from the
 #     stable channel if not specified.
 #
-#   - INSTALL_COMMIT
-#     Commit of cloudc2-deamon to download from temporary cloud storage.
+#   - CLOUDC2_daemon_INSTALL_COMMIT
+#     Commit of cloudc2-daemon to download from temporary cloud storage.
 #     * (for developer & QA use)
 #
-#   - INSTALL_BIN_DIR
-#     Directory to install cloudc2-deamon binary, links, and uninstall script to, or use
+#   - CLOUDC2_daemon_INSTALL_BIN_DIR
+#     Directory to install cloudc2-daemon binary, links, and uninstall script to, or use
 #     /usr/local/bin as the default
 #
-#   - INSTALL_SYSTEMD_DIR
+#   - CLOUDC2_daemon_INSTALL_SYSTEMD_DIR
 #     Directory to install systemd service and environment files to, or use
 #     /etc/systemd/system as the default
 #
-#   - INSTALL_NAME
-#     Name of systemd service to create, will default from the cloudc2-deamon exec command
-#     if not specified. If specified the name will be prefixed with 'cloudc2-deamon-'.
+#   - CLOUDC2_daemon_INSTALL_NAME
+#     Name of systemd service to create, will default from the cloudc2-daemon exec command
+#     if not specified. If specified the name will be prefixed with 'cloudc2-daemon-'.
 #
-#   - INSTALL_CHANNEL_URL
-#     Channel URL for fetching cloudc2-deamon download URL.
-#     Defaults to 'https://update-cloudc2-deamon.froghub.cn/v1-release/channels'.
+#   - CLOUDC2_daemon_INSTALL_CHANNEL_URL
+#     Channel URL for fetching cloudc2-daemon download URL.
+#     Defaults to 'https://update-cloudc2-daemon.froghub.cn/v1-release/channels'.
 #
-#   - INSTALL_CHANNEL
-#     Channel to use for fetching cloudc2-deamon download URL.
+#   - CLOUDC2_daemon_INSTALL_CHANNEL
+#     Channel to use for fetching cloudc2-daemon download URL.
 #     Defaults to 'stable'.
 #
-#   - WORKER_PAR
+#   - CLOUDC2_daemon_WORKER_PAR
 #     The number of parallel operations performed by the worker. The default is automatic
 
-GITHUB_URL=https://github.com/froghub-io/cloudc2-deamon/releases
-STORAGE_URL=https://
+GITHUB_URL=https://github.com/froghub-io/cloudc2-daemon/releases
+STORAGE_URL=https://cloudc2-daemon.oss-cn-beijing.aliyuncs.com
 DOWNLOADER=
 
 # --- helper functions for logs ---
@@ -122,11 +122,12 @@ escape_dq() {
 # --- define needed environment variables ---
 setup_env() {
 
+info "${CLOUDC2_daemon_INSTALL_NAME}"
     # --- use systemd name if defined or create default ---
-    if [ -n "${INSTALL_NAME}" ]; then
-        SYSTEM_NAME=cloudc2-deamon-${INSTALL_NAME}
+    if [ -n "${CLOUDC2_daemon_INSTALL_NAME}" ]; then
+        SYSTEM_NAME=cloudc2-daemon-${CLOUDC2_daemon_INSTALL_NAME}
     else
-        SYSTEM_NAME=cloudc2-deamon
+        SYSTEM_NAME=cloudc2-daemon
     fi
 
     # --- check for invalid characters in system name ---
@@ -145,12 +146,12 @@ setup_env() {
     fi
 
     # --- use binary install directory if defined or create default ---
-    if [ -n "${INSTALL_BIN_DIR}" ]; then
-        BIN_DIR=${INSTALL_BIN_DIR}
+    if [ -n "${CLOUDC2_daemon_INSTALL_BIN_DIR}" ]; then
+        BIN_DIR=${CLOUDC2_daemon_INSTALL_BIN_DIR}
     else
         # --- use /usr/local/bin if root can write to it, otherwise use /opt/bin if it exists
         BIN_DIR=/usr/local/bin
-        if ! $SUDO sh -c "touch ${BIN_DIR}/cloudc2-deamon-ro-test && rm -rf ${BIN_DIR}/cloudc2-deamon-ro-test"; then
+        if ! $SUDO sh -c "touch ${BIN_DIR}/cloudc2-daemon-ro-test && rm -rf ${BIN_DIR}/cloudc2-daemon-ro-test"; then
             if [ -d /opt/bin ]; then
                 BIN_DIR=/opt/bin
             fi
@@ -158,26 +159,26 @@ setup_env() {
     fi
 
     # --- use systemd directory if defined or create default ---
-    if [ -n "${INSTALL_SYSTEMD_DIR}" ]; then
-        SYSTEMD_DIR="${INSTALL_SYSTEMD_DIR}"
+    if [ -n "${CLOUDC2_daemon_INSTALL_SYSTEMD_DIR}" ]; then
+        SYSTEMD_DIR="${CLOUDC2_daemon_INSTALL_SYSTEMD_DIR}"
     else
         SYSTEMD_DIR=/etc/systemd/system
     fi
 
     # --- set related files from system name ---
-    SERVICE_CLOUDC2_DEAMON=${SYSTEM_NAME}.service
+    SERVICE_CLOUDC2_daemon=${SYSTEM_NAME}.service
     UNINSTALL_SH=${UNINSTALL_SH:-${BIN_DIR}/${SYSTEM_NAME}-uninstall.sh}
-    KILLALL_SH=${KILLALL_SH:-${BIN_DIR}/cloudc2-deamon-killall.sh}
+    KILLALL_SH=${KILLALL_SH:-${BIN_DIR}/cloudc2-daemon-killall.sh}
 
-    FILE_SERVICE=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_DEAMON}
-    FILE_ENV=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_DEAMON}.env
+    FILE_SERVICE=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_daemon}
+    FILE_ENV=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_daemon}.env
 
-    # --- get hash of config & exec for currently installed cloudc2-deamon ---
+    # --- get hash of config & exec for currently installed cloudc2-daemon ---
     PRE_INSTALL_HASHES=$(get_installed_hashes)
 
     # --- setup channel values
-    INSTALL_CHANNEL_URL=${INSTALL_CHANNEL_URL:-'https://update-cloudc2-deamon.froghub.cn/v1-release/channels'}
-    INSTALL_CHANNEL=${INSTALL_CHANNEL:-'stable'}
+    CLOUDC2_daemon_INSTALL_CHANNEL_URL=${CLOUDC2_daemon_INSTALL_CHANNEL_URL:-'https://update-cloudc2-daemon.froghub.cn/v1-release/channels'}
+    CLOUDC2_daemon_INSTALL_CHANNEL=${CLOUDC2_daemon_INSTALL_CHANNEL:-'stable'}
 }
 
 # --- set arch and suffix, fatal if architecture not supported ---
@@ -211,9 +212,9 @@ verify_downloader() {
 
 # --- create temporary directory and cleanup when done ---
 setup_tmp() {
-    TMP_DIR=$(mktemp -d -t cloudc2-deamon-install.XXXXXXXXXX)
-    TMP_HASH=${TMP_DIR}/cloudc2-deamon.hash
-    TMP_BIN=${TMP_DIR}/cloudc2-deamon.bin
+    TMP_DIR=$(mktemp -d -t cloudc2-daemon-install.XXXXXXXXXX)
+    TMP_HASH=${TMP_DIR}/cloudc2-daemon.hash
+    TMP_BIN=${TMP_DIR}/cloudc2-daemon.bin
     cleanup() {
         code=$?
         set +e
@@ -224,28 +225,28 @@ setup_tmp() {
     trap cleanup INT EXIT
 }
 
-# --- use desired cloudc2-deamon version if defined or find version from channel ---
+# --- use desired cloudc2-daemon version if defined or find version from channel ---
 get_release_version() {
-     if [ -n "${INSTALL_COMMIT}" ]; then
-         VERSION_CLOUDC2_DEAMON="commit ${INSTALL_COMMIT}"
-     elif [ -n "${INSTALL_VERSION}" ]; then
-         VERSION_CLOUDC2_DEAMON=${INSTALL_VERSION}
+     if [ -n "${CLOUDC2_daemon_INSTALL_COMMIT}" ]; then
+         VERSION_CLOUDC2_daemon="commit ${CLOUDC2_daemon_INSTALL_COMMIT}"
+     elif [ -n "${CLOUDC2_daemon_INSTALL_VERSION}" ]; then
+         VERSION_CLOUDC2_daemon=${CLOUDC2_daemon_INSTALL_VERSION}
      else
-         info "Finding release for channel ${INSTALL_CHANNEL}"
-         version_url="${INSTALL_CHANNEL_URL}/${INSTALL_CHANNEL}"
+         info "Finding release for channel ${CLOUDC2_daemon_INSTALL_CHANNEL}"
+         version_url="${CLOUDC2_daemon_INSTALL_CHANNEL_URL}/${CLOUDC2_daemon_INSTALL_CHANNEL}"
          case $DOWNLOADER in
              curl)
-                 VERSION_CLOUDC2_DEAMON=$(curl -w '%{url_effective}' -L -s -S ${version_url} -o /dev/null | sed -e 's|.*/||')
+                 VERSION_CLOUDC2_daemon=$(curl -w '%{url_effective}' -L -s -S ${version_url} -o /dev/null | sed -e 's|.*/||')
                  ;;
              wget)
-                 VERSION_CLOUDC2_DEAMON=$(wget -SqO /dev/null ${version_url} 2>&1 | grep -i Location | sed -e 's|.*/||')
+                 VERSION_CLOUDC2_daemon=$(wget -SqO /dev/null ${version_url} 2>&1 | grep -i Location | sed -e 's|.*/||')
                  ;;
              *)
                  fatal "Incorrect downloader executable '$DOWNLOADER'"
                  ;;
          esac
      fi
-    info "Using ${VERSION_CLOUDC2_DEAMON} as release"
+    info "Using ${VERSION_CLOUDC2_daemon} as release"
 }
 
 # --- download from github url ---
@@ -270,22 +271,23 @@ download() {
 
 # --- download hash from github url ---
 download_hash() {
-    if [ -n "${INSTALL_COMMIT}" ]; then
-        HASH_URL=${STORAGE_URL}/cloudc2-deamon${SUFFIX}-${INSTALL_COMMIT}.sha256sum
+    info "${CLOUDC2_daemon_INSTALL_COMMIT}"
+    if [ -n "${CLOUDC2_daemon_INSTALL_COMMIT}" ]; then
+        HASH_URL=${STORAGE_URL}/${CLOUDC2_daemon_INSTALL_COMMIT}/sha256sum-${ARCH}.txt
     else
-        HASH_URL=${GITHUB_URL}/download/${VERSION_CLOUDC2_DEAMON}/sha256sum-${ARCH}.txt
+        HASH_URL=${GITHUB_URL}/download/${VERSION_CLOUDC2_daemon}/sha256sum-${ARCH}.txt
     fi
     info "Downloading hash ${HASH_URL}"
     download ${TMP_HASH} ${HASH_URL}
-    HASH_EXPECTED=$(grep " cloudc2-deamon${SUFFIX}" ${TMP_HASH})
+    HASH_EXPECTED=$(grep " cloudc2-daemon${SUFFIX}" ${TMP_HASH})
     HASH_EXPECTED=${HASH_EXPECTED%%[[:blank:]]*}
 
 }
 
 # --- check hash against installed version ---
 installed_hash_matches() {
-    if [ -x ${BIN_DIR}/cloudc2-deamon ]; then
-        HASH_INSTALLED=$(sha256sum ${BIN_DIR}/cloudc2-deamon)
+    if [ -x ${BIN_DIR}/cloudc2-daemon ]; then
+        HASH_INSTALLED=$(sha256sum ${BIN_DIR}/cloudc2-daemon)
         HASH_INSTALLED=${HASH_INSTALLED%%[[:blank:]]*}
         if [ "${HASH_EXPECTED}" = "${HASH_INSTALLED}" ]; then
             return
@@ -296,10 +298,10 @@ installed_hash_matches() {
 
 # --- download binary from github url ---
 download_binary() {
-    if [ -n "${INSTALL_COMMIT}" ]; then
-        BIN_URL=${STORAGE_URL}/cloudc2-deamon${SUFFIX}-${INSTALL_COMMIT}
+    if [ -n "${CLOUDC2_daemon_INSTALL_COMMIT}" ]; then
+        BIN_URL=${STORAGE_URL}/${CLOUDC2_daemon_INSTALL_COMMIT}/cloudc2-daemon${SUFFIX}
     else
-        BIN_URL=${GITHUB_URL}/download/${VERSION_CLOUDC2_DEAMON}/cloudc2-deamon${SUFFIX}
+        BIN_URL=${GITHUB_URL}/download/${VERSION_CLOUDC2_daemon}/cloudc2-daemon${SUFFIX}
     fi
     info "Downloading binary ${BIN_URL}"
     download ${TMP_BIN} ${BIN_URL}
@@ -318,12 +320,12 @@ verify_binary() {
 # --- setup permissions and move binary to system directory ---
 setup_binary() {
     chmod 755 ${TMP_BIN}
-    info "Installing cloudc2-deamon to ${BIN_DIR}/cloudc2-deamon"
+    info "Installing cloudc2-daemon to ${BIN_DIR}/cloudc2-daemon"
     $SUDO chown root:root ${TMP_BIN}
-    $SUDO mv -f ${TMP_BIN} ${BIN_DIR}/cloudc2-deamon
+    $SUDO mv -f ${TMP_BIN} ${BIN_DIR}/cloudc2-daemon
 }
 
-# --- download and verify cloudc2-deamon ---
+# --- download and verify cloudc2-daemon ---
 download_and_verify() {
     setup_verify_arch
     verify_downloader curl || verify_downloader wget || fatal 'Can not find curl or wget for downloading files'
@@ -332,7 +334,7 @@ download_and_verify() {
     download_hash
 
     if installed_hash_matches; then
-        info 'Skipping binary downloaded, installed cloudc2-deamon matches hash'
+        info 'Skipping binary downloaded, installed cloudc2-daemon matches hash'
         return
     fi
 
@@ -343,19 +345,19 @@ download_and_verify() {
 
 # --- add additional utility links ---
 create_symlinks() {
-    [ "${INSTALL_SYMLINK}" = skip ] && return
+    [ "${CLOUDC2_daemon_INSTALL_SYMLINK}" = skip ] && return
 
-    for cmd in cloudc2-deamon; do
-        if [ ! -e ${BIN_DIR}/${cmd} ] || [ "${INSTALL_SYMLINK}" = force ]; then
+    for cmd in cloudc2-daemon; do
+        if [ ! -e ${BIN_DIR}/${cmd} ] || [ "${CLOUDC2_daemon_INSTALL_SYMLINK}" = force ]; then
             which_cmd=$(command -v ${cmd} 2>/dev/null || true)
-            if [ -z "${which_cmd}" ] || [ "${INSTALL_SYMLINK}" = force ]; then
-                info "Creating ${BIN_DIR}/${cmd} symlink to cloudc2-deamon"
-                $SUDO ln -sf cloudc2-deamon ${BIN_DIR}/${cmd}
+            if [ -z "${which_cmd}" ] || [ "${CLOUDC2_daemon_INSTALL_SYMLINK}" = force ]; then
+                info "Creating ${BIN_DIR}/${cmd} symlink to cloudc2-daemon"
+                $SUDO ln -sf cloudc2-daemon ${BIN_DIR}/${cmd}
             else
-                info "Skipping ${BIN_DIR}/${cmd} symlink to cloudc2-deamon, command exists in PATH at ${which_cmd}"
+                info "Skipping ${BIN_DIR}/${cmd} symlink to cloudc2-daemon, command exists in PATH at ${which_cmd}"
             fi
         else
-            info "Skipping ${BIN_DIR}/${cmd} symlink to cloudc2-deamon, already exists"
+            info "Skipping ${BIN_DIR}/${cmd} symlink to cloudc2-daemon, already exists"
         fi
     done
 }
@@ -369,11 +371,11 @@ create_killall() {
 
 set -x
 
-for service in /etc/systemd/system/cloudc2-deamon*.service; do
+for service in /etc/systemd/system/cloudc2-daemon*.service; do
     [ -s $service ] && systemctl stop $(basename $service)
 done
 
-for service in /etc/init.d/cloudc2-deamon*; do
+for service in /etc/init.d/cloudc2-daemon*; do
     [ -x $service ] && $service stop
 done
 
@@ -436,19 +438,19 @@ remove_uninstall() {
 }
 trap remove_uninstall EXIT
 
-if (ls ${SYSTEMD_DIR}/cloudc2-deamon*.service || ls /etc/init.d/cloudc2-deamon*) >/dev/null 2>&1; then
-    set +x; echo 'Additional cloudc2-deamon services installed, skipping uninstall of cloudc2-deamon'; set -x
+if (ls ${SYSTEMD_DIR}/cloudc2-daemon*.service || ls /etc/init.d/cloudc2-daemon*) >/dev/null 2>&1; then
+    set +x; echo 'Additional cloudc2-daemon services installed, skipping uninstall of cloudc2-daemon'; set -x
     exit
 fi
 
-for cmd in cloudc2-deamon; do
+for cmd in cloudc2-daemon; do
     if [ -L ${BIN_DIR}/\$cmd ]; then
         rm -f ${BIN_DIR}/\$cmd
     fi
 done
 
-rm -rf /etc/froghub/cloudc2-deamon
-rm -f ${BIN_DIR}/cloudc2-deamon
+rm -rf /etc/froghub/cloudc2-daemon
+rm -f ${BIN_DIR}/cloudc2-daemon
 rm -f ${KILLALL_SH}
 
 EOF
@@ -459,17 +461,17 @@ EOF
 # --- disable current service if loaded --
 systemd_disable() {
     $SUDO systemctl disable ${SYSTEM_NAME} >/dev/null 2>&1 || true
-    $SUDO rm -f /etc/systemd/system/${SERVICE_CLOUDC2_DEAMON} || true
-    $SUDO rm -f /etc/systemd/system/${SERVICE_CLOUDC2_DEAMON}.env || true
+    $SUDO rm -f /etc/systemd/system/${SERVICE_CLOUDC2_daemon} || true
+    $SUDO rm -f /etc/systemd/system/${SERVICE_CLOUDC2_daemon}.env || true
 }
 
-# --- capture current env and create file containing cloudc2-deamon variables ---
+# --- capture current env and create file containing cloudc2-daemon variables ---
 create_env_file() {
     info "env: Creating environment file ${FILE_ENV}"
     info "${FILE_ENV}"
     $SUDO touch ${FILE_ENV}
     $SUDO chmod 0600 ${FILE_ENV}
-    env | grep 'CLOUDC2_DEAMON_' | $SUDO tee ${FILE_ENV} >/dev/null
+    env | grep 'CLOUDC2_daemon_' | $SUDO tee ${FILE_ENV} >/dev/null
     env | grep -Ei '^(NO|HTTP|HTTPS)_PROXY' | $SUDO tee -a ${FILE_ENV} >/dev/null
 }
 
@@ -478,7 +480,7 @@ create_systemd_service_file() {
     info "systemd: Creating service file ${FILE_SERVICE}"
     $SUDO tee ${FILE_SERVICE} >/dev/null << EOF
 [Unit]
-Description=Cloudc2_Deamon
+Description=Cloudc2_daemon
 Documentation=https://www.froghub.io
 Wants=network-online.target
 After=network-online.target
@@ -503,7 +505,7 @@ TimeoutStartSec=0
 Restart=always
 RestartSec=5s
 ExecStartPre=-$(pwd)/install.sh update
-ExecStart=${BIN_DIR}/cloudc2-deamon deamon
+ExecStart=${BIN_DIR}/cloudc2-daemon daemon
 
 EOF
 }
@@ -514,9 +516,9 @@ create_service_file() {
     return 0
 }
 
-# --- get hashes of the current cloudc2-deamon bin and service files
+# --- get hashes of the current cloudc2-daemon bin and service files
 get_installed_hashes() {
-    $SUDO sha256sum ${BIN_DIR}/cloudc2-deamon ${FILE_SERVICE} ${FILE_ENV} 2>&1 || true
+    $SUDO sha256sum ${BIN_DIR}/cloudc2-daemon ${FILE_SERVICE} ${FILE_ENV} 2>&1 || true
 }
 
 # --- enable and start systemd service ---
