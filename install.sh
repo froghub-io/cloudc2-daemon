@@ -183,7 +183,7 @@ info "${CLOUDC2_DAEMON_INSTALL_NAME}"
 # --- set arch and suffix, fatal if architecture not supported ---
 setup_verify_arch() {
     if [ -z "$ARCH" ]; then
-        ARCH=$(uname -m)
+        ARCH=$(cat /proc/cpuinfo | grep name | cut -f2 -d: | head -n 1 | awk '{print $1}' | cut -f 1 -d '(')
     fi
     case $ARCH in
         amd64)
