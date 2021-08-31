@@ -57,7 +57,7 @@ set -o noglob
 #
 #   - CLOUDC2_DAEMON_INSTALL_CHANNEL_URL
 #     Channel URL for fetching cloudc2-daemon download URL.
-#     Defaults to 'https://update-cloudc2-daemon.froghub.cn/v1-release/channels'.
+#     Defaults to 'https://update.froghub.cn/v1-release/channels'.
 #
 #   - CLOUDC2_DAEMON_INSTALL_CHANNEL
 #     Channel to use for fetching cloudc2-daemon download URL.
@@ -176,7 +176,7 @@ info "${CLOUDC2_DAEMON_INSTALL_NAME}"
     PRE_INSTALL_HASHES=$(get_installed_hashes)
 
     # --- setup channel values
-    CLOUDC2_DAEMON_INSTALL_CHANNEL_URL=${CLOUDC2_DAEMON_INSTALL_CHANNEL_URL:-'https://update-cloudc2-daemon.froghub.cn/v1-release/channels'}
+    CLOUDC2_DAEMON_INSTALL_CHANNEL_URL=${CLOUDC2_DAEMON_INSTALL_CHANNEL_URL:-'https://update.froghub.cn/v1-release/channels'}
     CLOUDC2_DAEMON_INSTALL_CHANNEL=${CLOUDC2_DAEMON_INSTALL_CHANNEL:-'stable'}
 }
 
