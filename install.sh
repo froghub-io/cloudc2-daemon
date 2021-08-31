@@ -488,7 +488,7 @@ After=network-online.target
 WantedBy=multi-user.target
 
 [Service]
-Type=notify
+Type=simple
 EnvironmentFile=-/etc/default/%N
 EnvironmentFile=-/etc/sysconfig/%N
 EnvironmentFile=-${FILE_ENV}
