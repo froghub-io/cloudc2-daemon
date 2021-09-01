@@ -186,12 +186,12 @@ setup_verify_arch() {
         ARCH=$(cat /proc/cpuinfo | grep name | cut -f2 -d: | head -n 1 | awk '{print $1}' | cut -f 1 -d '(')
     fi
     case $ARCH in
-        amd64)
+        AMD)
             ARCH=amd64
             SUFFIX=-${ARCH}
             ;;
-        x86_64)
-            ARCH=amd64
+        Intel)
+            ARCH=intel64
             SUFFIX=-${ARCH}
             ;;
         *)
