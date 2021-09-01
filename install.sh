@@ -274,7 +274,7 @@ download_hash() {
     if [ -n "${CLOUDC2_DAEMON_INSTALL_COMMIT}" ]; then
         HASH_URL=${STORAGE_URL}/${CLOUDC2_DAEMON_INSTALL_COMMIT}/sha256sum-${ARCH}.txt
     else
-        HASH_URL=${STORAGE_URL}/${CLOUDC2_DAEMON_INSTALL_COMMIT}/sha256sum-${ARCH}.txt
+        HASH_URL=${STORAGE_URL}/${VERSION_CLOUDC2_DAEMON}/sha256sum-${ARCH}.txt
     fi
     info "Downloading hash ${HASH_URL}"
     download ${TMP_HASH} ${HASH_URL}
@@ -300,7 +300,7 @@ download_binary() {
     if [ -n "${CLOUDC2_DAEMON_INSTALL_COMMIT}" ]; then
         BIN_URL=${STORAGE_URL}/${CLOUDC2_DAEMON_INSTALL_COMMIT}/cloudc2-daemon${SUFFIX}
     else
-        BIN_URL=${STORAGE_URL}/${CLOUDC2_DAEMON_INSTALL_COMMIT}/cloudc2-daemon${SUFFIX}
+        BIN_URL=${STORAGE_URL}/${VERSION_CLOUDC2_DAEMON}/cloudc2-daemon${SUFFIX}
     fi
     info "Downloading binary ${BIN_URL}"
     download ${TMP_BIN} ${BIN_URL}
