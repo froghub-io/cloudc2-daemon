@@ -7,7 +7,7 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/libhwloc.so.15 /usr/lib/x86_64-linux-gnu/li
 
 ## 环境变量说明（非必填）
 * CLOUDC2_DAEMON_INSTALL_COMMIT 指定版本，否则走默认更新
-* CLOUDC2_DAEMON_FIL_PROOFS_PARAMETER_CACHE 指定零知识证明文件缓存路径，必须保证当前路径有250G内容以上
+* CLOUDC2_DAEMON_FIL_PROOFS_PARAMETER_CACHE 指定零知识证明文件缓存路径，必须保证当前路径有250G内容以上（注：/var/local作为默认路径）
 
 ## 执行命令
 export CLOUDC2_DAEMON_APPID=你的appID
