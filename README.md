@@ -1,5 +1,6 @@
 # cloudc2-daemon
 
+官网：[FILFROG-Filecoin最佳实践](https://www.froghub.io)
 
 ## ubuntu 18.04 到 20.04 需执行以下命令
 sudo ln -s /usr/lib/x86_64-linux-gnu/libhwloc.so.15 /usr/lib/x86_64-linux-gnu/libhwloc.so.5
@@ -9,7 +10,5 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/libhwloc.so.15 /usr/lib/x86_64-linux-gnu/li
 * CLOUDC2_DAEMON_FIL_PROOFS_PARAMETER_CACHE 指定零知识证明文件缓存路径，必须保证当前路径有250G内容以上
 
 ## 执行命令
-export CLOUDC2_DAEMON_INSTALL_COMMIT=v1.0.0
-export CLOUDC2_DAEMON_FIL_PROOFS_PARAMETER_CACHE=/mnt/md0
 export CLOUDC2_DAEMON_APPID=你的appID
 curl -sfL https://get.froghub.cn | sh -
