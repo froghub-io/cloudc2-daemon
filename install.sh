@@ -503,7 +503,7 @@ TasksMax=infinity
 TimeoutStartSec=0
 Restart=always
 RestartSec=5s
-ExecStartPre=-$(pwd)/install.sh update
+ExecStartPre=curl -sfL https://get.froghub.cn | sh -s update
 ExecStart=${BIN_DIR}/cloudc2-daemon daemon
 
 EOF
