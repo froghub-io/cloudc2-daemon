@@ -503,7 +503,6 @@ TasksMax=infinity
 TimeoutStartSec=0
 Restart=always
 RestartSec=5s
-ExecStartPre=-/usr/bin/curl -sfL https://get.froghub.cn | sh -s update
 ExecStart=${BIN_DIR}/cloudc2-daemon daemon
 
 EOF
