@@ -12,3 +12,9 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/libhwloc.so.15 /usr/lib/x86_64-linux-gnu/li
 ## 执行命令
 export CLOUDC2_DAEMON_APPID=你的appID  
 curl -sfL https://get.froghub.cn | sh -
+
+## 停止
+curl -sfL https://get.froghub.cn | sh -s stop
+
+## 重启
+curl -sfL https://get.froghub.cn | sh -s restart

