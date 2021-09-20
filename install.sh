@@ -179,7 +179,6 @@ info "${CLOUDC2_DAEMON_INSTALL_NAME}"
     FILE_SERVICE=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_DAEMON}
     FILE_ENV=${SYSTEMD_DIR}/${SERVICE_CLOUDC2_DAEMON}.env
     FILE_START=${BIN_DIR}/${SYSTEM_NAME}-start.sh
-    FILE_STOP=${BIN_DIR}/${SYSTEM_NAME}-stop.sh
     FILE_CRON=${CRON_DIR}/${SYSTEM_NAME}
 
     # --- get hash of config & exec for currently installed cloudc2-daemon ---
@@ -442,7 +441,6 @@ fi
 rm -f ${FILE_SERVICE}
 rm -f ${FILE_ENV}
 rm -f ${FILE_START}
-rm -f ${FILE_STOP}
 rm -f ${FILE_CRON}
 
 remove_uninstall() {
@@ -493,14 +491,6 @@ create_start_file() {
     $SUDO touch ${FILE_START}
     $SUDO chmod 0755 ${FILE_START}
     curl -sfL https://get.froghub.cn/start.sh | $SUDO tee ${FILE_START} >/dev/null
-}
-
-# --- capture current start and stop file containing cloudc2-daemon variables ---
-create_stop_file() {
-    info "sh: Creating sh file ${FILE_STOP}"
-    $SUDO touch ${FILE_STOP}
-    $SUDO chmod 0755 ${FILE_STOP}
-    curl -sfL https://get.froghub.cn/stop.sh | $SUDO tee ${FILE_STOP} >/dev/null
 }
 
 # --- capture current cron and create file containing cloudc2-daemon variables ---
@@ -561,14 +551,24 @@ systemd_enable() {
 
 systemd_start() {
     info "systemd: Starting ${SYSTEM_NAME}"
-    $SUDO bash ${FILE_STOP}
+    pid=$(ps x | grep "${SYSTEM_NAME} daemon" | grep -v grep | awk '{print $1}')
+    if [ -n "$pid" ]; then
+      kill -9 $pid
+    fi
     create_cron_file
     $SUDO systemctl restart cron
 }
 
 systemd_stop() {
     info "systemd: Stoping ${SYSTEM_NAME}"
-    $SUDO bash ${FILE_STOP}
+    pid=$(ps x | grep "${SYSTEM_NAME} daemon" | grep -v grep | awk '{print $1}')
+    if [ -n "$pid" ]; then
+      kill -9 $pid
+    fi
+    pid=$(ps x | grep "${SYSTEM_NAME} worker" | grep -v grep | awk '{print $1}')
+    if [ -n "$pid" ]; then
+      kill -9 $pid
+    fi
     remove_cron_file
     $SUDO systemctl restart cron
 }
@@ -623,7 +623,6 @@ service_stop() {
             systemd_disable
             create_env_file
             create_start_file
-            create_stop_file
             create_service_file
             service_enable_and_start
         ;;
